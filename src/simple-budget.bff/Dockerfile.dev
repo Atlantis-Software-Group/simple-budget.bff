@@ -1,0 +1,17 @@
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
+USER app
+WORKDIR /app/src
+
+# Ensure we listen on any IP Address 
+
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+ARG BUILD_CONFIGURATION=debug
+WORKDIR /app/src
+COPY simple-budget.bff.csproj .
+COPY . .
+RUN dotnet restore "./simple-budget.bff.csproj"
+RUN dotnet build "./simple-budget.bff.csproj" -c $BUILD_CONFIGURATION -o /app/build
+
+FROM build AS dev
+ENV DOTNET_URLS=http://+:5290
+CMD ["dotnet", "watch", "run"]
