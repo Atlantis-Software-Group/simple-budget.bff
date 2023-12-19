@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "name": "Identity",
+            "type": "docker",
+            "request": "attach",
+            "platform": "netCore",
+            "processName": "simple-budget.bff",
+            "sourceFileMap": {
+                "/app/src": "${workspaceFolder}/src/simple-budget.bff"
+            }
+        }
+    ]
+}
