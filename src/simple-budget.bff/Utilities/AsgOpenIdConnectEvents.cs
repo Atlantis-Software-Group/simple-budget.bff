@@ -9,14 +9,4 @@ public static class AsgOpenIdConnectEvents
     {
         return Task.CompletedTask;
     }
-
-    public static Task OnRedirectToIdentityProvider(RedirectContext context)
-    {
-        return Task.CompletedTask;
-    }
-
-    internal static Task OnTokenResponseReceived(TokenResponseReceivedContext context)
-    {
-        return Task.CompletedTask;
-    }
 }
