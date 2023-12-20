@@ -1,7 +1,7 @@
 {
     "configurations": [
         {
-            "name": "Identity",
+            "name": "Simple Budget BFF",
             "type": "docker",
             "request": "attach",
             "platform": "netCore",
