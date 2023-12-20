@@ -25,25 +25,25 @@ public static class HostingExtensions
             options.Cookie.HttpOnly = true;
             options.Cookie.SameSite = SameSiteMode.Strict;
             options.Cookie.Name = CookieAuthenticationDefaults.AuthenticationScheme;
+            options.Events.OnRedirectToLogin = (ctx) => { 
+                ctx.Response.StatusCode = 401;
+                return Task.CompletedTask; 
+            };
+            options.Events.OnRedirectToAccessDenied = (ctx) => {
+                ctx.Response.StatusCode = 403;
+                return Task.CompletedTask;
+            };
             options.LoginPath = "/User/NotAuthorized";
         })
         .AddOpenIdConnect(OpenIdConnectDefaults.AuthenticationScheme, options =>
         {
-            options.Authority = configurationManager["Authentication:OIDC:Authority"];
-            options.RequireHttpsMetadata = true;
-            options.MetadataAddress = $"{configurationManager["Authentication:OIDC:ValidIssuer"]}/.well-known/openid-configuration";
+            options.Authority = configurationManager["Authentication:OIDC:Authority"];            
             options.SaveTokens = true;
             options.GetClaimsFromUserInfoEndpoint = true;
             options.ClientId = "backend-for-frontend";
             options.ClientSecret = "49C1A7E1-0C79-4A89-A3D6-A37998FB86B0";
             options.ResponseType = "code";
-            options.TokenValidationParameters = new TokenValidationParameters()
-            {
-                ValidateAudience = false,
-                ValidTypes = new[] { "at+jwt", "JWT" },
-                ValidIssuer = configurationManager["Authentication:OIDC:ValidIssuer"],
-                ValidateLifetime = true
-            };
+
             options.Scope.Clear();
             options.Scope.Add("openid");
             options.Scope.Add("email");
@@ -52,9 +52,7 @@ public static class HostingExtensions
 
             options.Events = new OpenIdConnectEvents
             {
-                OnRedirectToIdentityProvider = AsgOpenIdConnectEvents.OnRedirectToIdentityProvider,
                 OnTokenValidated = AsgOpenIdConnectEvents.OnTokenValidated,
-                OnTokenResponseReceived = AsgOpenIdConnectEvents.OnTokenResponseReceived
             };
         });
 
@@ -86,6 +84,11 @@ public static class HostingExtensions
             });
         });
 
+        services.AddIdpRedirect(options => {
+            options.RedirectFrom = configurationManager["AUTH:LOCAL:IDP:REDIRECTFROM"] ?? string.Empty;
+            options.RedirectTo = configurationManager["AUTH:LOCAL:IDP:REDIRECTTO"] ?? string.Empty;
+        });
+
         return services;
     }
 
@@ -105,6 +108,7 @@ public static class HostingExtensions
         {
             app.UseSwagger();
             app.UseSwaggerUI();
+            app.UseIdpRedirect();
         }
 
         app.UseHealthChecks("/health");
