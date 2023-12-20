@@ -12,7 +12,6 @@ public static class AsgOpenIdConnectEvents
 
     public static Task OnRedirectToIdentityProvider(RedirectContext context)
     {
-        context.ProtocolMessage.IssuerAddress = "https://localhost:3103/connect/authorize";
         return Task.CompletedTask;
     }
 
