@@ -1,8 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
-using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 using Serilog;
 using Yarp.ReverseProxy.Transforms;
 
@@ -17,42 +16,41 @@ public static class HostingExtensions
         .AddAuthentication(schemes =>
         {            
             schemes.DefaultSignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
-            schemes.DefaultAuthenticateScheme = OpenIdConnectDefaults.AuthenticationScheme;
+            schemes.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            schemes.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
             schemes.DefaultSignOutScheme = OpenIdConnectDefaults.AuthenticationScheme;
         })
         .AddCookie(CookieAuthenticationDefaults.AuthenticationScheme, options =>
         {
+            options.ForwardChallenge = OpenIdConnectDefaults.AuthenticationScheme;
+            options.ForwardAuthenticate = JwtBearerDefaults.AuthenticationScheme;
             options.Cookie.HttpOnly = true;
             options.Cookie.SameSite = SameSiteMode.Strict;
             options.Cookie.Name = CookieAuthenticationDefaults.AuthenticationScheme;
-            options.Events.OnRedirectToLogin = (ctx) => { 
-                ctx.Response.StatusCode = 401;
-                return Task.CompletedTask; 
+            options.Events.OnRedirectToLogin = CookieEvents.OnRedirectToLogin;
+            options.Events.OnRedirectToAccessDenied = CookieEvents.OnRedirectToAccessDenied;
+        })
+        .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options => {
+            options.Events = new JwtBearerEvents() {
+                OnMessageReceived = AsgJwtBearerEvents.OnMessageReceived
             };
-            options.Events.OnRedirectToAccessDenied = (ctx) => {
-                ctx.Response.StatusCode = 403;
-                return Task.CompletedTask;
-            };
-            options.LoginPath = "/User/NotAuthorized";
         })
         .AddOpenIdConnect(OpenIdConnectDefaults.AuthenticationScheme, options =>
         {
             options.Authority = configurationManager["Authentication:OIDC:Authority"];            
-            options.SaveTokens = true;
-            options.GetClaimsFromUserInfoEndpoint = true;
+            options.SaveTokens = false;
+            options.GetClaimsFromUserInfoEndpoint = false;
             options.ClientId = "backend-for-frontend";
             options.ClientSecret = "49C1A7E1-0C79-4A89-A3D6-A37998FB86B0";
             options.ResponseType = "code";
-
+            
             options.Scope.Clear();
             options.Scope.Add("openid");
-            options.Scope.Add("email");
-            options.Scope.Add("user");
             options.Scope.Add("offline_access");
 
             options.Events = new OpenIdConnectEvents
             {
-                OnTokenValidated = AsgOpenIdConnectEvents.OnTokenValidated,
+                OnTokenValidated = AsgOpenIdConnectEvents.OnTokenValidated
             };
         });
 
@@ -62,7 +60,7 @@ public static class HostingExtensions
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen();
-
+        
         services.AddReverseProxy()
                         .LoadFromConfig(configurationManager.GetSection("ReverseProxy"))
                         .AddTransforms(builderContext =>
@@ -88,6 +86,8 @@ public static class HostingExtensions
             options.RedirectFrom = configurationManager["AUTH:LOCAL:IDP:REDIRECTFROM"] ?? string.Empty;
             options.RedirectTo = configurationManager["AUTH:LOCAL:IDP:REDIRECTTO"] ?? string.Empty;
         });
+        
+        services.AddMemoryCache();
 
         return services;
     }

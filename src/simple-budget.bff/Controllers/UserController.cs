@@ -1,7 +1,7 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using Microsoft.AspNetCore.Authentication;
+﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace simple_budget.bff.Controllers
@@ -10,18 +10,14 @@ namespace simple_budget.bff.Controllers
     public class UserController : ControllerBase
     {
         [HttpGet]
-        public async Task Login([FromQuery]string ReturnUrl)
+        public async Task<ActionResult> Login()
         {   
-            bool challenge = true;         
-            string? access_token = await HttpContext.GetTokenAsync("access_token");
-            if ( !string.IsNullOrWhiteSpace(access_token) )
-            {
-                JwtSecurityToken jwtToken = new JwtSecurityToken(access_token);
-                challenge = (jwtToken == null) || (jwtToken.ValidFrom > DateTime.UtcNow) || (jwtToken.ValidTo < DateTime.UtcNow);
-            }
+            bool challenge = !HttpContext.User.Identity?.IsAuthenticated ?? true;            
 
             if ( challenge )
                 await HttpContext.ChallengeAsync(OpenIdConnectDefaults.AuthenticationScheme);
+
+            return RedirectToAction("LoggedIn");
         }
 
         [HttpGet]
@@ -31,9 +27,10 @@ namespace simple_budget.bff.Controllers
         }
 
         [HttpGet]
-        public Task NotAuthorized()
+        [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme)]
+        public Task LoggedIn()
         {
-            return Task.FromResult(Forbid(CookieAuthenticationDefaults.AuthenticationScheme));
+            return Task.CompletedTask;
         }
     }
 }
