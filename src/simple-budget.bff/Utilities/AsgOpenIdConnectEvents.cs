@@ -35,7 +35,7 @@ public static class AsgOpenIdConnectEvents
                 return userInfo;
             });
 
-            ctx.Response.Cookies.Append("sub", cacheKey, new CookieOptions{                
+            ctx.Response.Cookies.Append(CookieContants.CookieName, cacheKey, new CookieOptions{                
                 IsEssential = true,
                 Secure = true,
                 HttpOnly = true,

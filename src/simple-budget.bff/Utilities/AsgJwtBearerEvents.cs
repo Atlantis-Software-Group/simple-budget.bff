@@ -10,7 +10,7 @@ public static class AsgJwtBearerEvents
 {
     public static Task OnMessageReceived(MessageReceivedContext context)
     {
-        string? sub = context.HttpContext.Request.Cookies["sub"];
+        string? sub = context.HttpContext.Request.Cookies[CookieContants.CookieName];
         if ( string.IsNullOrWhiteSpace(sub) )
             return Task.CompletedTask;
 
