@@ -35,14 +35,8 @@ public static class AsgOpenIdConnectEvents
                 return userInfo;
             });
 
-            ctx.Response.Cookies.Append(CookieContants.CookieName, cacheKey, new CookieOptions{                
-                IsEssential = true,
-                Secure = true,
-                HttpOnly = true,
-                Domain = "localhost",
-                SameSite = Microsoft.AspNetCore.Http.SameSiteMode.Strict,
-                Expires = DateTime.UtcNow.AddSeconds(3500)
-            });
+            ICookieService cookieService = scope.ServiceProvider.GetRequiredService<ICookieService>();
+            cookieService.SetResponseCookie(CookieContants.CookieName, cacheKey);
         }
 
         return Task.CompletedTask;

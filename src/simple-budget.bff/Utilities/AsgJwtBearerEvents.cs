@@ -10,14 +10,16 @@ public static class AsgJwtBearerEvents
 {
     public static Task OnMessageReceived(MessageReceivedContext context)
     {
-        string? sub = context.HttpContext.Request.Cookies[CookieContants.CookieName];
-        if ( string.IsNullOrWhiteSpace(sub) )
-            return Task.CompletedTask;
-
         IServiceScopeFactory scopeFactory = context.HttpContext.RequestServices.GetRequiredService<IServiceScopeFactory>();
 
         using (IServiceScope scope = scopeFactory.CreateScope())
         {
+            ICookieService cookieService = scope.ServiceProvider.GetRequiredService<ICookieService>();
+            string sub = cookieService.GetHeaderCookieValue(CookieContants.CookieName);
+
+            if ( string.IsNullOrWhiteSpace(sub) )
+                return Task.CompletedTask;
+
             IMemoryCache memoryCache = scope.ServiceProvider.GetRequiredService<IMemoryCache>();
             UserAuthenticationInformation? userInfo = memoryCache.Get<UserAuthenticationInformation>(sub);
 

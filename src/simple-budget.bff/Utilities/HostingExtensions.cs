@@ -48,6 +48,8 @@ public static class HostingExtensions
             options.Scope.Clear();
             options.Scope.Add("openid");
             options.Scope.Add("offline_access");
+            options.Scope.Add("user");
+            options.Scope.Add("email");
 
             options.Events = new OpenIdConnectEvents
             {
@@ -88,7 +90,11 @@ public static class HostingExtensions
             options.RedirectTo = configurationManager["AUTH:LOCAL:IDP:REDIRECTTO"] ?? string.Empty;
         });
         
+        services.AddScoped<ICookieService, CookieService>();
+
         services.AddMemoryCache();
+        services.AddHttpContextAccessor();
+        services.AddDataProtection();
 
         return services;
     }
