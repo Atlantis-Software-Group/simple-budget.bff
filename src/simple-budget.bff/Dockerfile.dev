@@ -1,8 +1,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS dev
+RUN dotnet nuget add source /app/packages -n local
 WORKDIR /app/src
-COPY . .
-RUN dotnet restore "./simple-budget.bff.csproj"
-RUN dotnet build "./simple-budget.bff.csproj"
+COPY ./entrypoint.sh ./
 
 RUN chmod 755 ./entrypoint.sh
 ENTRYPOINT [ "sh", "-c", "./entrypoint.sh" ]
