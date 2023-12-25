@@ -10,13 +10,13 @@ public class TokenManagementService : ITokenManagementService
     private readonly ICacheService _cacheService;
     private readonly ICookieService _cookieService;
     private readonly TimeProvider _timeProvider;
-    private readonly IConfigurationManager _configurationManager;
+    private readonly IConfiguration _configurationManager;
     private readonly IHttpClientFactory _httpClientFactory;
 
     public TokenManagementService(ICacheService cacheService, 
                                     ICookieService cookieService, 
                                     TimeProvider timeProvider, 
-                                    IConfigurationManager configurationManager,
+                                    IConfiguration configurationManager,
                                     IHttpClientFactory httpClientFactory)
     {
         _cacheService = cacheService;
@@ -82,10 +82,12 @@ public class TokenManagementService : ITokenManagementService
         if ( response.IsError )
             return false;
 
-        UserAuthenticationInformation userInfo = UserInfo;
-        userInfo.AccessToken = response.AccessToken;
-        userInfo.IdToken = response.IdentityToken;
-        userInfo.RefreshToken = response.RefreshToken;
+        UserAuthenticationInformation userInfo = new UserAuthenticationInformation
+        {
+            AccessToken = response.AccessToken,
+            IdToken = response.IdentityToken,
+            RefreshToken = response.RefreshToken
+        };
 
         _ = _cacheService.SetEntry(Sub, userInfo);
 
