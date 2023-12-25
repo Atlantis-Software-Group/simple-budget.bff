@@ -41,8 +41,8 @@ public static class HostingExtensions
             options.Authority = configurationManager["Authentication:OIDC:Authority"];            
             options.SaveTokens = false;
             options.GetClaimsFromUserInfoEndpoint = false;
-            options.ClientId = "backend-for-frontend";
-            options.ClientSecret = "49C1A7E1-0C79-4A89-A3D6-A37998FB86B0";
+            options.ClientId = configurationManager["Authentication:OIDC:ClientID"];
+            options.ClientSecret = configurationManager["Authentication:OIDC:ClientSecret"];
             options.ResponseType = "code";
             
             options.Scope.Clear();
@@ -91,10 +91,13 @@ public static class HostingExtensions
         });
         
         services.AddScoped<ICookieService, CookieService>();
-
+        services.AddScoped<ICacheService, CacheService>();
+        services.AddScoped<ITokenManagementService, TokenManagementService>();
         services.AddMemoryCache();
         services.AddHttpContextAccessor();
         services.AddDataProtection();
+        services.AddSingleton(TimeProvider.System);
+        services.AddHttpClient();
 
         return services;
     }

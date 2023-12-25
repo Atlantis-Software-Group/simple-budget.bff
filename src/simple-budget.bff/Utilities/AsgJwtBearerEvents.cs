@@ -8,26 +8,20 @@ namespace simple_budget.bff.Utilities;
 
 public static class AsgJwtBearerEvents
 {
-    public static Task OnMessageReceived(MessageReceivedContext context)
+    public static async Task OnMessageReceived(MessageReceivedContext context)
     {
         IServiceScopeFactory scopeFactory = context.HttpContext.RequestServices.GetRequiredService<IServiceScopeFactory>();
 
-        using (IServiceScope scope = scopeFactory.CreateScope())
-        {
-            ICookieService cookieService = scope.ServiceProvider.GetRequiredService<ICookieService>();
-            string sub = cookieService.GetHeaderCookieValue(CookieContants.CookieName);
+        using (AsyncServiceScope scope = scopeFactory.CreateAsyncScope())
+        {            
+            ITokenManagementService tokenManagementService = scope.ServiceProvider.GetRequiredService<ITokenManagementService>();
+            string access_token = await tokenManagementService.GetAccessTokenAsync();
 
-            if ( string.IsNullOrWhiteSpace(sub) )
-                return Task.CompletedTask;
+            if ( string.IsNullOrWhiteSpace(access_token) )
+                return;
 
-            IMemoryCache memoryCache = scope.ServiceProvider.GetRequiredService<IMemoryCache>();
-            UserAuthenticationInformation? userInfo = memoryCache.Get<UserAuthenticationInformation>(sub);
-
-            if ( userInfo is null )
-                return Task.CompletedTask;
-            
             List<AuthenticationToken> tokens = [
-                new AuthenticationToken{ Name = "access_token", Value = userInfo.AccessToken ?? string.Empty}
+                new AuthenticationToken{ Name = "access_token", Value = access_token}
             ];
 
             context.Properties.StoreTokens(tokens);
@@ -39,6 +33,6 @@ public static class AsgJwtBearerEvents
             context.Success();
         }
 
-        return Task.CompletedTask;
+        return;
     }
 }

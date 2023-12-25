@@ -1,6 +1,2 @@
-@simple_budget.bff_HostAddress = http://localhost:5290
+@HostAddress = http://localhost:5290
 
-GET {{simple_budget.bff_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###
