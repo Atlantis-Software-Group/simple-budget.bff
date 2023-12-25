@@ -1,5 +1,7 @@
+using Serilog;
 using simple_budget.bff.Utilities;
 
+Log.Information("Starting BFF");
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.ConfigureServices(builder.Configuration);
@@ -11,7 +13,13 @@ try
 {
     app.Run();    
 }
-catch (Exception)
+catch (Exception ex)
 {    
+    Log.Fatal(ex, "Application Terminated unexpectedly");
     throw;
+}
+finally
+{
+    Log.Information("Application Terminated");
+    Log.CloseAndFlush();
 }

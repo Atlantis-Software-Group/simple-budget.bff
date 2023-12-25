@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Serilog;
+using Serilog.Exceptions;
 using Yarp.ReverseProxy.Transforms;
 
 namespace simple_budget.bff.Utilities;
@@ -104,9 +105,18 @@ public static class HostingExtensions
 
     public static ConfigureHostBuilder ConfigureHost(this ConfigureHostBuilder host)
     {
-        host.UseSerilog((context, configuration) =>
+        host.UseSerilog((context, services, configuration) =>
         {
-            configuration.ReadFrom.Configuration(context.Configuration);
+            IConfiguration config = context.Configuration;
+            string seqUrl = config["Seq:ServerUrl"] ?? string.Empty;
+
+            configuration
+                .MinimumLevel.Debug()
+                .Enrich.WithProperty("Application", "Simple Budget BFF")
+                .Enrich.WithExceptionDetails()
+                .Enrich.FromLogContext()
+                .WriteTo.Seq(seqUrl)
+                .WriteTo.Console(restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Information);
         });
         return host;
     }
@@ -121,6 +131,7 @@ public static class HostingExtensions
             app.UseIdpRedirect();
         }
 
+        app.UseSerilogRequestLogging();
         app.UseHealthChecks("/health");
         app.UseAuthentication();
         app.UseAuthorization();
