@@ -65,13 +65,13 @@ namespace simple_budget.bff.Controllers
             string sub = CookieService.GetHeaderCookieValue(CookieContants.CookieName);
             MemoryCache.TryGetValue(sub, out UserAuthenticationInformation? userInfo);
 
-            UserInformations.Add(userInfo);
+            UserInformations.Add(userInfo ?? new UserAuthenticationInformation());
 
             bool successful = await TokenManagementService.RefreshTokenAsync();
             if ( successful )
             {                
                 MemoryCache.TryGetValue(sub, out UserAuthenticationInformation? updatedUserInfo);                   
-                UserInformations.Add(updatedUserInfo);
+                UserInformations.Add(updatedUserInfo ?? new UserAuthenticationInformation());
             }
 
             return UserInformations;
