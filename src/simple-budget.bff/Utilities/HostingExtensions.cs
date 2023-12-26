@@ -112,7 +112,7 @@ public static class HostingExtensions
 
             configuration
                 .MinimumLevel.Debug()
-                .Enrich.WithProperty("Application", "Simple Budget BFF")
+                .Enrich.WithProperty("Application", "SimpleBudget.BFF")
                 .Enrich.WithExceptionDetails()
                 .Enrich.FromLogContext()
                 .WriteTo.Seq(seqUrl)
