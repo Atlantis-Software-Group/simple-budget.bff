@@ -1,0 +1,28 @@
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS dev
+
+# Copy Certs
+WORKDIR /usr/local/share/ca-certificates
+COPY ./simple-budget/certs/ca ./
+
+#update the certificates for the container
+RUN update-ca-certificates 
+
+WORKDIR /https
+COPY ./simple-budget/certs/https ./
+
+# Copy Packages to /app/packages
+WORKDIR /app/packages
+COPY ./packages ./
+
+# Add NuGet source: Local
+RUN dotnet nuget add source /app/packages -n local
+
+# Copy Main Project and dependencies
+WORKDIR /app/src
+COPY ./bff/src/simple-budget.bff ./simple-budget.bff
+
+# Build package
+WORKDIR /app/src/simple-budget.bff
+RUN dotnet build ./simple-budget.bff.csproj
+
+ENTRYPOINT [ "dotnet", "watch", "./bin/Debug/net8.0/simple-budget.bff.dll" ]
