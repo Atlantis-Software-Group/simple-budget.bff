@@ -4,8 +4,8 @@
             "name": "Simple Budget BFF",
             "type": "docker",
             "request": "attach",
-            "platform": "netCore",
-            "processName": "simple-budget.bff",
+            "platform": "netCore",            
+            "processId": "${command:pickRemoteDockerProcess}",
             "sourceFileMap": {
                 "/app/src": "${workspaceFolder}/src/simple-budget.bff"
             }
