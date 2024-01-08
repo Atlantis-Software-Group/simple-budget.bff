@@ -51,6 +51,7 @@ public static class HostingExtensions
             options.Scope.Add("offline_access");
             options.Scope.Add("user");
             options.Scope.Add("email");
+            options.Scope.Add("profile");
 
             options.Events = new OpenIdConnectEvents
             {
