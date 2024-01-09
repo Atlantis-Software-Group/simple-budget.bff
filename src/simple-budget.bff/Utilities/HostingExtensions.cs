@@ -101,6 +101,14 @@ public static class HostingExtensions
         services.AddSingleton(TimeProvider.System);
         services.AddHttpClient();
 
+        services.AddCors(options => {
+            options.AddPolicy(name: "localhost", 
+                            policy => {
+                                policy.WithOrigins("https://localhost:3100")
+                                        .AllowCredentials();
+                            });
+        });
+
         return services;
     }
 
@@ -134,6 +142,7 @@ public static class HostingExtensions
 
         app.UseSerilogRequestLogging();
         app.UseHealthChecks("/health");
+        app.UseCors("localhost");
         app.UseAuthentication();
         app.UseAuthorization();
         app.UseHttpLogging();
