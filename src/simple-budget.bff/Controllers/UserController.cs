@@ -1,7 +1,5 @@
-﻿using System.Reflection.Metadata.Ecma335;
-using Microsoft.AspNetCore.Authentication;
+﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
@@ -9,7 +7,7 @@ using simple_budget.bff.Models;
 
 namespace simple_budget.bff.Controllers
 {
-    [Route("[controller]/[action]")]    
+    [Route("[controller]")]    
     public class UserController : ControllerBase
     {
         public ICookieService CookieService { get; }
@@ -22,32 +20,39 @@ namespace simple_budget.bff.Controllers
             MemoryCache = memoryCache;
             TokenManagementService = tokenManagementService;
         }
-        [HttpGet]
-        public async Task<ActionResult> Login()
+        [HttpGet("login")]
+        [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme)]
+        public async Task<IActionResult> Login()
         {   
             bool challenge = !HttpContext.User.Identity?.IsAuthenticated ?? true;            
 
             if ( challenge )
-                await HttpContext.ChallengeAsync(OpenIdConnectDefaults.AuthenticationScheme);
+                await HttpContext.ChallengeAsync(CookieAuthenticationDefaults.AuthenticationScheme);       
 
-            return RedirectToAction("LoggedIn");
+            return Redirect("redirecttospa");
         }
 
-        [HttpGet]
+        [HttpGet("redirecttospa", Name = "RedirectToSPA")]
+        public Task<RedirectResult> RedirectToSPA()
+        {
+            return Task.FromResult(Redirect("https://localhost:3100/"));
+        }
+
+        [HttpGet("logout")]
         public Task<string> Logout()
         {
             return Task.FromResult("Logout");
         }
 
-        [HttpGet]
-        [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme)]
-        public Task LoggedIn()
-        {            
-            return Task.CompletedTask;
+        [HttpGet("loggedin", Name = "loggedin")]
+        [AllowAnonymous]
+        public bool LoggedIn()
+        {   
+            return HttpContext.User.Identity?.IsAuthenticated ?? false;
         }
 
 
-        [HttpGet]
+        [HttpGet("tokens")]
         [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme)]
         public Task<UserAuthenticationInformation> Tokens()
         {
@@ -56,7 +61,7 @@ namespace simple_budget.bff.Controllers
             return Task.FromResult(userInfo ?? new UserAuthenticationInformation());
         }
 
-        [HttpGet]
+        [HttpGet("refreshtoken")]
         [Authorize(AuthenticationSchemes = CookieAuthenticationDefaults.AuthenticationScheme)]
         public async Task<List<UserAuthenticationInformation>> RefreshTokens()
         {
