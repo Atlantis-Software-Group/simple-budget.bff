@@ -105,7 +105,9 @@ public static class HostingExtensions
             options.AddPolicy(name: "localhost", 
                             policy => {
                                 policy.WithOrigins("https://localhost:3100")
-                                        .AllowCredentials();
+                                        .AllowCredentials()    
+                                        .AllowAnyHeader()                                    
+                                        .AllowAnyMethod();
                             });
         });
 
